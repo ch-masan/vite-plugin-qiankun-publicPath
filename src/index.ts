@@ -61,12 +61,27 @@ const htmlPlugin: PluginFn = (qiankunName, microOption = {}) => {
     const script$ = $(scriptTag)
     const moduleSrc = script$.attr('src')
     let appendBase = ''
+    let getDomain = ''
     if (microOption.useDevMode && !isProduction) {
       appendBase = '(window.proxy ? (window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ + \'..\') : \'\') + '
+    } else {
+      getDomain = `
+        const domain = ''
+        try {
+            const url = new URL(window.proxy.__INJECTED_PUBLIC_PATH_BY_QIANKUN__)
+            domain = url.origin
+        } catch (error) {
+            domain = ''
+        }
+      `
+      appendBase = 'domain + '
     }
     script$.removeAttr('src')
     script$.removeAttr('type')
-    script$.html(`import(${appendBase}'${moduleSrc}')`)
+    script$.html(`
+      ${getDomain}
+      import(${appendBase}'${moduleSrc}')
+    `)
     return script$
   }
 
